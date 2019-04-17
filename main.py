@@ -35,7 +35,7 @@ class Downloader:
         
     def _scrape_pages(self, start_url, title):
         image_url = "none"
-        for page in trange(1,50,ascii=True, desc="processing..."):
+        for page in trange(1,50,ascii=True, desc=title):
             n_retry = 3
             while n_retry:
                 #print("\t\tprogress page %02d..."%page, end='')
@@ -65,7 +65,6 @@ class Downloader:
                 break
             else:
                 image_url = img_url
-        print('\n')
     
     def _scrape_episodes(self, main_page, main_url, title):
         print("start crawling %s"%title)
@@ -73,7 +72,6 @@ class Downloader:
         for el in els:
             first_page_title = el.attrs['title']
             first_page_url = main_url + el.attrs['href'].split(r'/')[-1]
-            print("\tcrawling %s"%first_page_title)
             self._scrape_pages(first_page_url, first_page_title)
         
     
