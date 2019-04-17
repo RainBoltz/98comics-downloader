@@ -13,14 +13,16 @@ class Downloader:
         
     def _download_image(self, url, fname):
         with open(os.path.join(self.curr_save_dir,fname), 'wb') as f:
-            while True:
+            n_retry = 3
+            while n_retry:
                 try:
                     browser = requests_html.HTMLSession()
                     this_image = browser.get(url, stream=True)
                     break
                 except Exception as e:
                     browser.close()
-                    pass
+                    n_retry -= 1
+                    time.sleep(10)
                     #print('err', str(e))
             for i in this_image.iter_content(1024):
                 if not i:
@@ -34,7 +36,8 @@ class Downloader:
     def _scrape_pages(self, start_url, title):
         image_url = "none"
         for page in trange(1,50,ascii=True, desc="processing..."):
-            while True:
+            n_retry = 3
+            while n_retry:
                 #print("\t\tprogress page %02d..."%page, end='')
                 try:
                     browser = requests_html.HTMLSession()
@@ -55,12 +58,14 @@ class Downloader:
                     break
                 except Exception as e:
                     browser.close()
-                    pass
+                    n_retry -= 1
+                    time.sleep(10)
                     #print('err', str(e))
             if img_url == image_url:
                 break
             else:
                 image_url = img_url
+        print('\n')
     
     def _scrape_episodes(self, main_page, main_url, title):
         print("start crawling %s"%title)
