@@ -35,10 +35,10 @@ class Downloader:
         
     def _scrape_pages(self, start_url, title):
         image_url = "none"
-        for page in trange(1,50,ascii=True, desc=title):
+        print("crawling %s..."%title)
+        for page in range(1,500):
             n_retry = 3
             while n_retry:
-                #print("\t\tprogress page %02d..."%page, end='')
                 try:
                     browser = requests_html.HTMLSession()
                     this_page = browser.get(start_url + '?p=%d'%page)
@@ -54,22 +54,35 @@ class Downloader:
                     browser.close()
                     if img_url == image_url:
                         break
-                    self._download_image(img_url, "%03d_%03d.jpg"%(int(title.split('集')[0]),page))
+                    
+                    if "集" in title:
+                        if '.' not in title:
+                            img_fname = "%03d_%03d.jpg"%(int(title.split('集')[0]),page)
+                        else:
+                            print("not a good comic ... (\"%s\" is a wrong format)"%title)
+                            sys.exit(0)
+                    elif "卷" in title:
+                        img_fname = "%03d_%03d.jpg"%(int(title.split('卷')[0]),page)
+                    else:
+                        print("not a good comic ... (\"%s\" is a wrong format)"%title)
+                            
+                    self._download_image(img_url, img_fname)
                     break
                 except Exception as e:
                     browser.close()
                     n_retry -= 1
                     time.sleep(10)
-                    #print('err', str(e))
+                    print('err:', str(e))
             if img_url == image_url:
                 break
             else:
                 image_url = img_url
     
-    def _scrape_episodes(self, main_page, main_url, title):
-        print("start crawling %s"%title)
+    def _scrape_episodes(self, main_page, main_url, title, start_episode=1):
+        print(":: start crawling %s ::"%title)
         els = main_page.html.xpath('//div[@class="chapter-list cf mt10"]//a')
-        for el in els:
+        for i_el in range(start_episode-1, len(els)):
+            el = els[i_el]
             first_page_title = el.attrs['title']
             first_page_url = main_url + el.attrs['href'].split(r'/')[-1]
             self._scrape_pages(first_page_url, first_page_title)
@@ -86,8 +99,17 @@ class Downloader:
             self.curr_save_dir = os.path.join(self.save_dir, comic_title)
             if not os.path.exists(self.curr_save_dir):
                 os.makedirs(self.curr_save_dir)
+                self._scrape_episodes(main_page, url, comic_title)
+            else:
+                imgs = os.listdir(self.curr_save_dir)
+                if len(imgs) == 0:
+                    self._scrape_episodes(main_page, url, comic_title)
+                else:
+                    sorted_imgs = sorted(imgs)
+                    last_episode = int(sorted_imgs[-1].split(r'/')[0])
+                    self._scrape_episodes(main_page, url, comic_title, last_episode)
+                
             
-            self._scrape_episodes(main_page, url, comic_title)
     
     def start(self, comics="comics.txt"):
         if not os.path.exists(comics):
