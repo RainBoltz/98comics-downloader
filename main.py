@@ -106,7 +106,7 @@ class Downloader:
                     self._scrape_episodes(main_page, url, comic_title)
                 else:
                     sorted_imgs = sorted(imgs)
-                    last_episode = int(sorted_imgs[-1].split(r'/')[0])
+                    last_episode = int(sorted_imgs[-1].split(r'_')[0])
                     self._scrape_episodes(main_page, url, comic_title, last_episode)
                 
             
