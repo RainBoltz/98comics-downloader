@@ -2,7 +2,7 @@ import requests_html
 import os, sys, time
 import urllib.request
 import requests as req
-from tqdm import tqdm, trange
+import configparser
 
 
 class Downloader:
@@ -13,7 +13,7 @@ class Downloader:
         
     def _download_image(self, url, fname):
         with open(os.path.join(self.curr_save_dir,fname), 'wb') as f:
-            n_retry = 3
+            n_retry = int(self.config["settings"]["err_n_retry"])
             while n_retry:
                 try:
                     browser = requests_html.HTMLSession()
@@ -22,8 +22,8 @@ class Downloader:
                 except Exception as e:
                     browser.close()
                     n_retry -= 1
-                    time.sleep(10)
-                    #print('err', str(e))
+                    time.sleep(int(self.config["settings"]["err_s_delay"]))
+                    print('img_%s err'%fname, str(e))
             for i in this_image.iter_content(1024):
                 if not i:
                     break
@@ -36,8 +36,8 @@ class Downloader:
     def _scrape_pages(self, start_url, title):
         image_url = "none"
         print("crawling %s..."%title)
-        for page in range(1,500):
-            n_retry = 3
+        for page in range(1,int(self.config["settings"]["max_pages"])+1):
+            n_retry = int(self.config["settings"]["err_n_retry"])
             while n_retry:
                 try:
                     browser = requests_html.HTMLSession()
@@ -71,8 +71,8 @@ class Downloader:
                 except Exception as e:
                     browser.close()
                     n_retry -= 1
-                    time.sleep(10)
-                    print('err:', str(e))
+                    time.sleep(int(self.config["settings"]["err_s_delay"]))
+                    print('page#%03d err:'%page, str(e))
             if img_url == image_url:
                 break
             else:
@@ -89,7 +89,7 @@ class Downloader:
         
     
     def _scrape_comics(self):
-        for url in self.comic_mainpage:
+        for url in self.config["comics"]:
             browser = requests_html.HTMLSession()
             main_page = browser.get(url)
             main_page.encoding = "utf-8"
@@ -111,21 +111,25 @@ class Downloader:
                 
             
     
-    def start(self, comics="comics.txt"):
-        if not os.path.exists(comics):
-            print('NO COMICS_FILE DETECTED!')
+    def start(self, comics=None):
+        if comics == None:
+            print('NO CONFIG_FILE GIVEN!')
             sys.exit(0)
-        with open(comics,'r') as f:
-            self.comic_mainpage = f.readlines()
-        self.comic_mainpage = [x.strip() for x in self.comic_mainpage]
-        print('Target Comics Loaded! (total: %d comics)'%len(self.comic_mainpage))
+        elif not os.path.exists(comics):
+            print('NO CONFIG_FILE DETECTED!')
+            sys.exit(0)
+        
+        self.config = configparser.ConfigParser(allow_no_value=True, delimiters=("="), inline_comment_prefixes=(";"))
+        self.config.read(comics, encoding="utf-8-sig")
+        
+        print('Target Comics Loaded! (total: %d comics)'%len(self.config['comics']))
         
         self._scrape_comics()
         
 
 if __name__ == "__main__":
     d = Downloader(save_dir="save")
-    d.start(comics="comics.txt")
+    d.start(comics="config.ini")
         
         
         
