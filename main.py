@@ -23,7 +23,7 @@ class Downloader:
                     browser.close()
                     n_retry -= 1
                     time.sleep(int(self.config["settings"]["err_s_delay"]))
-                    print('img_%s err'%fname, str(e))
+                    print('img_%s err'%fname, str(e), "(n_retry=%d)"%n_retry)
             for i in this_image.iter_content(1024):
                 if not i:
                     break
@@ -72,7 +72,7 @@ class Downloader:
                     browser.close()
                     n_retry -= 1
                     time.sleep(int(self.config["settings"]["err_s_delay"]))
-                    print('page#%03d err:'%page, str(e))
+                    print('page#%03d err:'%page, str(e), "(n_retry=%d)"%n_retry)
             if img_url == image_url:
                 break
             else:
