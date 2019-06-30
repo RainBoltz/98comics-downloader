@@ -78,10 +78,10 @@ class Downloader:
             else:
                 image_url = img_url
     
-    def _scrape_episodes(self, main_page, main_url, title, start_episode=1):
+    def _scrape_episodes(self, main_page, main_url, title, start_episode_i=0):
         print(":: start crawling %s ::"%title)
         els = main_page.html.xpath('//div[@class="chapter-list cf mt10"]//a')
-        for i_el in range(start_episode-1, len(els)):
+        for i_el in range(start_episode_i, len(els)):
             el = els[i_el]
             first_page_title = el.attrs['title']
             first_page_url = main_url + el.attrs['href'].split(r'/')[-1]
@@ -106,8 +106,10 @@ class Downloader:
                     self._scrape_episodes(main_page, url, comic_title)
                 else:
                     sorted_imgs = sorted(imgs)
+                    first_episode = int(sorted_imgs[0].split(r'_')[0])
                     last_episode = int(sorted_imgs[-1].split(r'_')[0])
-                    self._scrape_episodes(main_page, url, comic_title, last_episode)
+                    next_episode = last_episode - first_episode + 1
+                    self._scrape_episodes(main_page, url, comic_title, next_episode)
                 
             
     
