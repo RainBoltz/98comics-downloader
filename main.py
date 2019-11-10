@@ -56,11 +56,14 @@ class Downloader:
                         break
                     
                     if "集" in title:
-                        if '.' not in title:
-                            img_fname = "%03d_%03d.jpg"%(int(title.split('集')[0]),page)
-                        else:
+                        if '.' in title:
                             print("not a good comic ... (\"%s\" is a wrong format)"%title)
                             sys.exit(0)
+                        elif 'v' in title:
+                            eps = title.split('集')[0].split('v')[0]
+                            img_fname = "%03d_%03d.jpg"%(int(eps),page)
+                        else:
+                            img_fname = "%03d_%03d.jpg"%(int(title.split('集')[0]),page)
                     elif "卷" in title:
                         img_fname = "%03d_%03d.jpg"%(int(title.split('卷')[0]),page)
                     else:
