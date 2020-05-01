@@ -36,6 +36,36 @@ class Downloader:
     def _scrape_pages(self, start_url, title):
         image_url = "none"
         print("crawling %s..."%title)
+        
+        if "番外" in title:
+            self.last_n_eps += 0.1
+            eps = "%03d.%d"%(self.last_n_eps,self.last_n_eps-int(self.last_n_eps))
+        elif "集" in title:
+            if '.' in title:
+                print("not a good comic ... (\"%s\" is a wrong format)"%title)
+                sys.exit(0)
+            elif 'v' in title:
+                self.last_n_eps = int(title.split('集')[0].split('v')[0])
+                eps = "%03d"%self.last_n_eps
+            elif '上' in title:
+                self.last_n_eps = int(title.split('集')[0].split('上')[0])
+                eps = "%03d.a"%self.last_n_eps
+            elif '中' in title:
+                self.last_n_eps = int(title.split('集')[0].split('中')[0])
+                eps = "%03d.b"%self.last_n_eps
+            elif '下' in title:
+                self.last_n_eps = int(title.split('集')[0].split('下')[0])
+                eps = "%03d.c"%self.last_n_eps
+            else:
+                self.last_n_eps = int(title.split('集')[0])
+                eps = "%03d"%self.last_n_eps
+        elif "卷" in title:
+            self.last_n_eps = int(title.split('卷')[0])
+            eps = "%03d"%self.last_n_eps
+        else:
+            print("not a good comic ... (\"%s\" is a wrong format)"%title)
+            #sys.exit(0)
+            
         for page in range(1,int(self.config["settings"]["max_pages"])+1):
             n_retry = int(self.config["settings"]["err_n_retry"])
             while n_retry:
@@ -55,19 +85,7 @@ class Downloader:
                     if img_url == image_url:
                         break
                     
-                    if "集" in title:
-                        if '.' in title:
-                            print("not a good comic ... (\"%s\" is a wrong format)"%title)
-                            sys.exit(0)
-                        elif 'v' in title:
-                            eps = title.split('集')[0].split('v')[0]
-                            img_fname = "%03d_%03d.jpg"%(int(eps),page)
-                        else:
-                            img_fname = "%03d_%03d.jpg"%(int(title.split('集')[0]),page)
-                    elif "卷" in title:
-                        img_fname = "%03d_%03d.jpg"%(int(title.split('卷')[0]),page)
-                    else:
-                        print("not a good comic ... (\"%s\" is a wrong format)"%title)
+                    img_fname = "%s_%03d.jpg"%(eps,page)
                             
                     self._download_image(img_url, img_fname)
                     break
@@ -83,6 +101,7 @@ class Downloader:
     
     def _scrape_episodes(self, main_page, main_url, title, start_episode_i=0):
         print(":: start crawling %s ::"%title)
+        self.last_eps_post = "%03d"%start_episode_i #for awareness
         els = main_page.html.xpath('//div[@class="chapter-list cf mt10"]//a')
         for i_el in range(start_episode_i, len(els)):
             el = els[i_el]
