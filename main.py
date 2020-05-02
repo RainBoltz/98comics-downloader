@@ -68,6 +68,7 @@ class Downloader:
             
         for page in range(1,int(self.config["settings"]["max_pages"])+1):
             n_retry = int(self.config["settings"]["err_n_retry"])
+            img_url = None
             while n_retry:
                 try:
                     browser = requests_html.HTMLSession()
@@ -94,7 +95,9 @@ class Downloader:
                     n_retry -= 1
                     time.sleep(int(self.config["settings"]["err_s_delay"]))
                     print('page#%03d err:'%page, str(e), "(n_retry=%d)"%n_retry)
-            if img_url == image_url:
+            if not img_url:
+                break
+            elif img_url == image_url:
                 break
             else:
                 image_url = img_url
